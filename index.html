@@ -42,7 +42,7 @@
     <!-- CONTAINER PRINCIPAL -->
     <main class="flex-grow max-w-4xl w-full mx-auto p-4 space-y-6">
 
-        <!-- PAINEL DE ATUALIZAÇÃO DO GITHUB (NOVO!) -->
+        <!-- PAINEL DE ATUALIZAÇÃO DO GITHUB -->
         <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-md space-y-4 relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -115,11 +115,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wider">Nome do Produto *</label>
-                        <input type="text" id="prod-name" placeholder="Ex: Special Dog Carne 15kg" required class="w-full px-3.5 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium">
+                        <input type="text" id="prod-name" placeholder="Ex: Special Dog Carne 15kg" required class="w-full px-3.5 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium font-sans">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600 mb-1 uppercase tracking-wider">Preço (R$) *</label>
-                        <input type="number" step="0.01" id="prod-price" placeholder="Ex: 102.90" required class="w-full px-3.5 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium">
+                        <input type="number" step="0.01" id="prod-price" placeholder="Ex: 102.90" required class="w-full px-3.5 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm font-medium font-sans">
                     </div>
                 </div>
 
@@ -342,7 +342,7 @@
             const category = prodCategorySelect.value;
             const desc = prodDescTextarea.value.trim();
 
-            let image = "https://images.unsplash.com/photo-1589722244358-f0ec9c378f5b?w=400";
+            let image = "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400";
             if (uploadedProductImageBase64) {
                 image = uploadedProductImageBase64;
             } else if (editId) {
@@ -411,7 +411,7 @@
             inventoryListEl.innerHTML = '';
             totalInventoryEl.textContent = products.length;
             if (products.length === 0) {
-                inventoryListEl.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm">Nenhum produto cadastrado.</div>`;
+                inventoryListEl.innerHTML = `<div class="text-center py-6 text-gray-400 text-sm font-medium">Nenhum produto cadastrado.</div>`;
                 return;
             }
             products.forEach(p => {
@@ -438,18 +438,19 @@
             });
         }
 
-        // --- SISTEMA DE GERAÇÃO DO NOVO INDEX.HTML INTEGRADO COM IMAGENS COMPLETO ---
+        // --- SISTEMA À PROVA DE FALHAS: GERAÇÃO COM BASE64 ---
         function showGeneratedCode() {
-            // Constrói o HTML do cliente com as variáveis reais de fábrica injetadas diretamente!
-            const finalStoreConfig = JSON.stringify(storeConfig);
-            const finalProducts = JSON.stringify(products);
+            // Transformamos todas as variáveis complexas em strings Base64
+            // Isso evita QUALQUER conflito com aspas, quebras de linha ou caminhos locais de computador
+            const base64StoreConfig = btoa(unescape(encodeURIComponent(JSON.stringify(storeConfig))));
+            const base64Products = btoa(unescape(encodeURIComponent(JSON.stringify(products))));
 
             const generatedHtml = `<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Oficial - ${storeConfig.name}</title>
+    <title>Catálogo Oficial</title>
     <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"><\/script>
     <!-- FontAwesome para ícones profissionais -->
@@ -472,15 +473,15 @@
         <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-black text-xl shadow-md">
-                    <i class="fab fa-whatsapp"></i>
+                    <i class="fab fa-whatsapp"><\/i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-black tracking-tight text-gray-950">ZapCatálogo</h1>
-                    <p class="text-xs text-gray-500 font-medium">${storeConfig.name}</p>
+                    <h1 class="text-lg font-black tracking-tight text-gray-950">ZapCatálogo<\/h1>
+                    <p id="header-store-name" class="text-xs text-gray-500 font-medium">Bom Trato Pet Shop<\/p>
                 </div>
             </div>
             <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-[10px] font-black">
-                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"><\/span>
                 PEDIDOS DIRETOS
             </div>
         </div>
@@ -492,13 +493,13 @@
         <!-- CABEÇALHO DA VITRINE -->
         <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center space-y-3">
             <div class="relative inline-block">
-                <img id="preview-logo" src="${storeConfig.logo}" alt="Logo" class="w-20 h-20 rounded-full mx-auto object-cover border-2 border-emerald-500 p-0.5 shadow-md">
+                <img id="preview-logo" src="" alt="Logo" class="w-20 h-20 rounded-full mx-auto object-cover border-2 border-emerald-500 p-0.5 shadow-md">
                 <span class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px] text-white">
-                    <i class="fab fa-whatsapp"></i>
+                    <i class="fab fa-whatsapp"><\/i>
                 </span>
             </div>
-            <h2 class="text-xl font-black text-gray-950">${storeConfig.name}</h2>
-            <p class="text-xs text-gray-500 max-w-md mx-auto font-medium">${storeConfig.desc}</p>
+            <h2 id="preview-store-name" class="text-xl font-black text-gray-950"><\/h2>
+            <p id="preview-store-desc" class="text-xs text-gray-500 max-w-md mx-auto font-medium"><\/p>
         </div>
 
         <!-- VITRINE DE PRODUTOS -->
@@ -520,16 +521,16 @@
     <div id="cart-bar" class="fixed bottom-4 left-4 right-4 max-w-md mx-auto bg-gray-900 text-white p-3 rounded-2xl shadow-xl flex items-center justify-between transition-all duration-300 transform translate-y-32 opacity-0 z-40">
         <div class="flex items-center gap-2.5">
             <div class="relative w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center">
-                <i class="fas fa-shopping-bag text-sm"></i>
-                <span id="cart-count" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 text-black text-[9px] font-black rounded-full flex items-center justify-center">0</span>
+                <i class="fas fa-shopping-bag text-sm"><\/i>
+                <span id="cart-count" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-yellow-400 text-black text-[9px] font-black rounded-full flex items-center justify-center">0<\/span>
             </div>
             <div>
-                <p class="text-[10px] text-gray-400 font-bold uppercase leading-none">O meu carrinho</p>
-                <p id="cart-total" class="text-xs font-black text-white mt-0.5">R$ 0,00</p>
+                <p class="text-[10px] text-gray-400 font-bold uppercase leading-none">O meu carrinho<\/p>
+                <p id="cart-total" class="text-xs font-black text-white mt-0.5">R$ 0,00<\/p>
             </div>
         </div>
         <button id="btn-open-cart" class="bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs px-4 py-2 rounded-xl transition-all flex items-center gap-1">
-            Ver Sacola <i class="fas fa-chevron-right text-[10px]"></i>
+            Ver Sacola <i class="fas fa-chevron-right text-[10px]"><\/i>
         </button>
     </div>
 
@@ -538,32 +539,32 @@
         <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
             <div class="bg-emerald-600 p-4 text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-shopping-basket"></i>
-                    <h4 id="cart-modal-title" class="font-black text-sm uppercase tracking-wide">O meu Carrinho</h4>
+                    <i class="fas fa-shopping-basket"><\/i>
+                    <h4 id="cart-modal-title" class="font-black text-sm uppercase tracking-wide">O meu Carrinho<\/h4>
                 </div>
                 <button id="btn-close-cart" class="w-8 h-8 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center transition-all text-white">
-                    <i class="fas fa-times text-xs"></i>
+                    <i class="fas fa-times text-xs"><\/i>
                 </button>
             </div>
 
             <div class="bg-emerald-50 border-b border-emerald-100 px-4 py-2 flex items-center justify-center gap-2 shrink-0">
-                <span id="step-indicator-1" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white">1. Revisar Carrinho</span>
-                <span class="text-gray-400 text-xs"><i class="fas fa-chevron-right"></i></span>
-                <span id="step-indicator-2" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-500">2. Envio e Pagamento</span>
+                <span id="step-indicator-1" class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white">1. Revisar Carrinho<\/span>
+                <span class="text-gray-400 text-xs"><i class="fas fa-chevron-right"><\/i><\/span>
+                <span id="step-indicator-2" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-200 text-gray-500">2. Envio e Pagamento<\/span>
             </div>
 
             <div id="step-1-container" class="flex flex-col flex-grow overflow-hidden">
-                <div id="cart-items-list" class="flex-grow overflow-y-auto p-4 space-y-3 no-scrollbar"></div>
+                <div id="cart-items-list" class="flex-grow overflow-y-auto p-4 space-y-3 no-scrollbar"><\/div>
                 <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
-                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Subtotal da Compra</span>
-                    <span id="cart-step1-total" class="text-base font-black text-emerald-700">R$ 0,00</span>
+                    <span class="text-xs text-gray-500 font-bold uppercase tracking-wider">Subtotal da Compra<\/span>
+                    <span id="cart-step1-total" class="text-base font-black text-emerald-700">R$ 0,00<\/span>
                 </div>
                 <div class="p-4 border-t border-gray-100 bg-white grid grid-cols-2 gap-3 shrink-0">
                     <button id="btn-continue-shopping" class="w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5">
                         Comprar Mais
                     </button>
                     <button id="btn-go-to-step2" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 shadow-md">
-                        Avançar <i class="fas fa-arrow-right"></i>
+                        Avançar <i class="fas fa-arrow-right"><\/i>
                     </button>
                 </div>
             </div>
@@ -572,46 +573,46 @@
                 <div class="p-4 bg-gray-50 space-y-3 overflow-y-auto flex-grow no-scrollbar">
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Seu Nome *</label>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Seu Nome *<\/label>
                             <input type="text" id="client-name" placeholder="Nome Completo" class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Seu WhatsApp *</label>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Seu WhatsApp *<\/label>
                             <input type="tel" id="client-phone" placeholder="DDD + Número" class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium">
                         </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div class="col-span-2">
-                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Morada / Endereço Completo *</label>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Morada / Endereço Completo *<\/label>
                             <input type="text" id="client-address" placeholder="Rua, Número, Bairro, Cidade" class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Pagamento</label>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Pagamento<\/label>
                             <select id="client-pay" class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium">
-                                <option value="Pix">Pix</option>
-                                <option value="Cartão de Crédito">Cartão de Crédito</option>
-                                <option value="Cartão de Débito">Cartão de Débito</option>
-                                <option value="Dinheiro">Dinheiro</option>
-                            </select>
+                                <option value="Pix">Pix<\/option>
+                                <option value="Cartão de Crédito">Cartão de Crédito<\/option>
+                                <option value="Cartão de Débito">Cartão de Débito<\/option>
+                                <option value="Dinheiro">Dinheiro<\/option>
+                            <\/select>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Observações sobre o Pedido (Opcional)</label>
-                        <textarea id="client-obs" rows="2" placeholder="Ex: Deixar na portaria, campainha estragada, troco, etc..." class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium resize-none"></textarea>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-0.5">Observações sobre o Pedido (Opcional)<\/label>
+                        <textarea id="client-obs" rows="2" placeholder="Ex: Deixar na portaria, campainha estragada, troco, etc..." class="w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:border-emerald-500 font-medium resize-none"><\/textarea>
                     </div>
                 </div>
 
                 <div class="p-4 border-t border-gray-100 bg-white space-y-3 shrink-0">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500 font-bold">VALOR FINAL</span>
-                        <span id="cart-final-total" class="text-lg font-black text-emerald-700">R$ 0,00</span>
+                        <span class="text-xs text-gray-500 font-bold">VALOR FINAL<\/span>
+                        <span id="cart-final-total" class="text-lg font-black text-emerald-700">R$ 0,00<\/span>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <button id="btn-back-to-step1" class="col-span-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs uppercase transition-all">
                             Voltar
                         </button>
                         <button id="btn-send-whatsapp" class="col-span-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-lg">
-                            <i class="fab fa-whatsapp text-sm"></i> Enviar no Whats
+                            <i class="fab fa-whatsapp text-sm"><\/i> Enviar no Whats
                         </button>
                     </div>
                 </div>
@@ -621,17 +622,19 @@
 
     <!-- TOAST POPUP -->
     <div id="toast" class="fixed bottom-6 right-6 bg-gray-950 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all transform translate-y-24 opacity-0 z-50 flex items-center gap-2">
-        <i class="fas fa-check-circle text-emerald-400"></i>
-        <span id="toast-msg">Sucesso!</span>
+        <i class="fas fa-check-circle text-emerald-400"><\/i>
+        <span id="toast-msg">Sucesso!<\/span>
     </div>
 
     <footer class="bg-white border-t border-gray-200 py-6 mt-12 text-center text-xs text-gray-500">
-        ${storeConfig.name} • ZapCatálogo 🚀
-    </footer>
+        <span id="footer-text"><\/span>
+    <\/footer>
 
+    <!-- SISTEMA DE SEGURANÇA E INICIALIZAÇÃO -->
     <script>
-        let storeConfig = ${finalStoreConfig};
-        const defaultProducts = ${finalProducts};
+        // Carregamos os dados brutos e realizamos a decodificação Base64 segura
+        let storeConfig = JSON.parse(decodeURIComponent(escape(atob("${base64StoreConfig}"))));
+        const defaultProducts = JSON.parse(decodeURIComponent(escape(atob("${base64Products}"))));
 
         const appCategories = ['Todos', 'Geral', 'Rações', 'Acessórios', 'Medicamentos', 'Cães', 'Gatos', 'Promoção'];
         let activeFilter = 'Todos';
@@ -687,6 +690,8 @@
             previewLogo.src = storeConfig.logo;
             previewStoreName.textContent = storeConfig.name;
             previewStoreDesc.textContent = storeConfig.desc;
+            document.getElementById('header-store-name').textContent = storeConfig.name;
+            document.getElementById('footer-text').textContent = storeConfig.name + " • ZapCatálogo 🚀";
         }
 
         function renderCategoryFilters() {
@@ -725,7 +730,7 @@
                 card.innerHTML = \`
                     <div>
                         <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                            <img src="\${p.image}" class="w-full h-full object-cover">
+                            <img src="\${p.image}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400'">
                             <span class="absolute top-1.5 left-1.5 bg-black/50 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">\${p.category}<\/span>
                         </div>
                         <div class="p-2 space-y-1">
@@ -867,8 +872,29 @@
         function loadFromLocalStorage() {
             const savedStore = localStorage.getItem('zapcatalog_store');
             const savedProds = localStorage.getItem('zapcatalog_products');
-            if (savedStore) storeConfig = JSON.parse(savedStore);
-            if (savedProds && JSON.parse(savedProds).length > 0) products = JSON.parse(savedProds); else products = [...defaultProducts];
+            
+            if (savedStore) {
+                try {
+                    storeConfig = JSON.parse(savedStore);
+                } catch (e) {
+                    console.error("Erro de leitura do storeConfig", e);
+                }
+            }
+            
+            if (savedProds) {
+                try {
+                    const parsed = JSON.parse(savedProds);
+                    if (parsed && parsed.length > 0) {
+                        products = parsed;
+                    } else {
+                        products = [...defaultProducts];
+                    }
+                } catch (e) {
+                    products = [...defaultProducts];
+                }
+            } else {
+                products = [...defaultProducts];
+            }
         }
 
         function showToast(message) {
