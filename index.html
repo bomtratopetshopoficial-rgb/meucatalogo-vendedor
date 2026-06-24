@@ -215,6 +215,19 @@
     </div>
 
     <script>
+        // Funções auxiliares para codificação UTF-8 Base64 nativa e robusta (sem usar escape/unescape descontinuados)
+        function utob(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            }));
+        }
+
+        function btou(str) {
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
         let storeConfig = {
             name: "Bom Trato Pet Shop",
             phone: "5543999999999", 
@@ -438,19 +451,18 @@
             });
         }
 
-        // --- SISTEMA À PROVA DE FALHAS: GERAÇÃO COM BASE64 ---
+        // --- GERAÇÃO COMPLETA DO SITE DO CLIENTE EM BASE64 DE SEGURANÇA ---
         function showGeneratedCode() {
-            // Transformamos todas as variáveis complexas em strings Base64
-            // Isso evita QUALQUER conflito com aspas, quebras de linha ou caminhos locais de computador
-            const base64StoreConfig = btoa(unescape(encodeURIComponent(JSON.stringify(storeConfig))));
-            const base64Products = btoa(unescape(encodeURIComponent(JSON.stringify(products))));
+            // Conversão UTF-8 Base64 robusta para evitar QUALQUER tipo de caractere especial problemático
+            const base64StoreConfig = utob(JSON.stringify(storeConfig));
+            const base64Products = utob(JSON.stringify(products));
 
             const generatedHtml = `<!DOCTYPE html>
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Oficial</title>
+    <title>Catálogo Oficial<\/title>
     <!-- Tailwind CSS para design moderno e responsivo -->
     <script src="https://cdn.tailwindcss.com"><\/script>
     <!-- FontAwesome para ícones profissionais -->
@@ -467,6 +479,38 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 min-h-screen flex flex-col">
+
+    <!-- MODAL DE AVISO DE ENTREGA INICIAL (NOVO!) -->
+    <div id="delivery-warning-modal" class="fixed inset-0 bg-black/75 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col p-6 text-center space-y-4">
+            <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mx-auto border-2 border-emerald-100">
+                <i class="fas fa-truck-moving"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-base font-black text-gray-950 uppercase tracking-wide">Informativo de Entrega<\/h3>
+                <p class="text-xs text-gray-500 leading-relaxed">
+                    Estimado cliente, para garantir um atendimento rápido e de qualidade, atente-se às nossas regras de envio:
+                <\/p>
+            <\/div>
+            <div class="bg-gray-50 rounded-2xl p-4 text-left space-y-2.5 border border-gray-100">
+                <div class="flex items-start gap-2.5 text-xs text-gray-700">
+                    <i class="fas fa-exclamation-circle text-amber-500 mt-0.5"><\/i>
+                    <p>Compras <b>abaixo de R$ 30,00</b> possuem taxa de entrega.<\/p>
+                <\/div>
+                <div class="flex items-start gap-2.5 text-xs text-gray-700">
+                    <i class="fas fa-map-marker-alt text-amber-500 mt-0.5"><\/i>
+                    <p>Distâncias <b>maiores que 2,5 km</b> também podem ocasionar taxa de entrega adicional.<\/p>
+                <\/div>
+                <div class="flex items-start gap-2.5 text-xs text-gray-500 italic">
+                    <i class="fab fa-whatsapp text-emerald-500 mt-0.5"><\/i>
+                    <p>As taxas exatas e condições de envio serão informadas e combinadas diretamente via WhatsApp.<\/p>
+                <\/div>
+            <\/div>
+            <button id="btn-accept-delivery-warning" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+                Concordo e Prosseguir
+            <\/button>
+        </div>
+    </div>
 
     <!-- CABEÇALHO DO CLIENTE -->
     <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
@@ -533,6 +577,40 @@
             Ver Sacola <i class="fas fa-chevron-right text-[10px]"><\/i>
         </button>
     </div>
+
+    <!-- MODAL DE DETALHES DO PRODUTO -->
+    <div id="product-details-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-scale-up">
+            <!-- Cabeçalho com Imagem -->
+            <div class="relative aspect-[4/3] bg-gray-100 shrink-0 overflow-hidden">
+                <img id="details-modal-img" src="" alt="Produto" class="w-full h-full object-cover">
+                <button id="btn-close-details" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-all">
+                    <i class="fas fa-times text-sm"><\/i>
+                <\/button>
+                <span id="details-modal-category" class="absolute bottom-3 left-3 bg-black/50 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full"><\/span>
+            <\/div>
+            
+            <!-- Corpo do Modal -->
+            <div class="p-5 flex-grow overflow-y-auto no-scrollbar space-y-3">
+                <h3 id="details-modal-name" class="text-base font-black text-gray-950 leading-tight"><\/h3>
+                <div class="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <span class="text-xs text-gray-400 font-bold">PREÇO UNITÁRIO<\/span>
+                    <span id="details-modal-price" class="text-lg font-black text-emerald-700"><\/span>
+                <\/div>
+                <div class="space-y-1">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Descrição do Produto<\/p>
+                    <p id="details-modal-desc" class="text-xs text-gray-600 leading-relaxed whitespace-pre-line"><\/p>
+                <\/div>
+            <\/div>
+
+            <!-- Ações -->
+            <div class="p-4 border-t border-gray-100 bg-white shrink-0">
+                <button id="btn-details-add-to-cart" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+                    <i class="fas fa-cart-plus"><\/i> Adicionar à Sacola
+                </button>
+            <\/div>
+        <\/div>
+    <\/div>
 
     <!-- MODAL DO CARRINHO -->
     <div id="cart-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden">
@@ -632,9 +710,22 @@
 
     <!-- SISTEMA DE SEGURANÇA E INICIALIZAÇÃO -->
     <script>
-        // Carregamos os dados brutos e realizamos a decodificação Base64 segura
-        let storeConfig = JSON.parse(decodeURIComponent(escape(atob("${base64StoreConfig}"))));
-        const defaultProducts = JSON.parse(decodeURIComponent(escape(atob("${base64Products}"))));
+        // Realizamos a decodificação Base64 extremamente segura e robusta para UTF-8
+        function btou(str) {
+            return decodeURIComponent(atob(str).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
+        let storeConfig = {};
+        let defaultProducts = [];
+
+        try {
+            storeConfig = JSON.parse(btou("${base64StoreConfig}"));
+            defaultProducts = JSON.parse(btou("${base64Products}"));
+        } catch (e) {
+            console.error("Erro ao decodificar configurações iniciais", e);
+        }
 
         const appCategories = ['Todos', 'Geral', 'Rações', 'Acessórios', 'Medicamentos', 'Cães', 'Gatos', 'Promoção'];
         let activeFilter = 'Todos';
@@ -673,6 +764,20 @@
         const clientAddressInput = document.getElementById('client-address');
         const clientObsInput = document.getElementById('client-obs');
 
+        // Elementos do Modal de Detalhes
+        const productDetailsModal = document.getElementById('product-details-modal');
+        const detailsModalImg = document.getElementById('details-modal-img');
+        const detailsModalCategory = document.getElementById('details-modal-category');
+        const detailsModalName = document.getElementById('details-modal-name');
+        const detailsModalPrice = document.getElementById('details-modal-price');
+        const detailsModalDesc = document.getElementById('details-modal-desc');
+        const btnDetailsAddToCart = document.getElementById('btn-details-add-to-cart');
+        const btnCloseDetails = document.getElementById('btn-close-details');
+
+        // Modal do Aviso de Entrega e Aceite
+        const deliveryWarningModal = document.getElementById('delivery-warning-modal');
+        const btnAcceptDeliveryWarning = document.getElementById('btn-accept-delivery-warning');
+
         window.addEventListener('load', () => {
             loadFromLocalStorage();
             updateStoreUI();
@@ -681,9 +786,24 @@
             loadClientInfo();
             updateCartUI();
 
+            // Lógica do Modal de Aviso de Entrega
+            // Verifica se o cliente já aceitou o aviso nesta sessão
+            const warningAccepted = sessionStorage.getItem('delivery_warning_accepted');
+            if (warningAccepted === 'true') {
+                deliveryWarningModal.classList.add('hidden');
+            }
+
+            btnAcceptDeliveryWarning.addEventListener('click', () => {
+                sessionStorage.setItem('delivery_warning_accepted', 'true');
+                deliveryWarningModal.classList.add('hidden');
+                showToast("Aviso aceito! Boas compras.");
+            });
+
             clientNameInput.addEventListener('input', saveClientInfo);
             clientPhoneInput.addEventListener('input', saveClientInfo);
             clientAddressInput.addEventListener('input', saveClientInfo);
+
+            btnCloseDetails.addEventListener('click', closeProductDetails);
         });
 
         function updateStoreUI() {
@@ -726,7 +846,9 @@
 
             filteredProducts.forEach(p => {
                 const card = document.createElement('div');
-                card.className = "bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-all";
+                card.className = "bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md hover:scale-[1.02] cursor-pointer transition-all";
+                // Ao clicar no card, abre a tela de detalhes
+                card.setAttribute('onclick', \`openProductDetails('\${p.id}')\`);
                 card.innerHTML = \`
                     <div>
                         <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
@@ -734,13 +856,14 @@
                             <span class="absolute top-1.5 left-1.5 bg-black/50 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">\${p.category}<\/span>
                         </div>
                         <div class="p-2 space-y-1">
-                            <h4 class="text-[11px] font-black text-gray-900 leading-tight truncate">\${p.name}<\/h4>
-                            <p class="text-[9px] text-gray-500 leading-tight line-clamp-2 h-6">\${p.desc || ''}<\/p>
+                            <h4 class="text-[11px] font-black text-gray-900 truncate leading-tight">\${p.name}<\/h4>
+                            <p class="text-[9px] text-gray-500 leading-tight line-clamp-2 h-6">\${p.desc || 'Sem descrição'}<\/p>
                         </div>
                     </div>
                     <div class="p-2 pt-0 flex items-center justify-between gap-1 mt-1">
                         <span class="text-xs font-black text-emerald-700">R$ \${p.price.toFixed(2)}<\/span>
-                        <button onclick="addToCart('\${p.id}')" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center active:scale-90 transition-all">
+                        <!-- Botão "+" isolado para não abrir os detalhes (stopPropagation) -->
+                        <button onclick="event.stopPropagation(); addToCart('\${p.id}')" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center active:scale-90 transition-all">
                             <i class="fas fa-plus text-[10px]"><\/i>
                         </button>
                     </div>
@@ -748,6 +871,34 @@
                 catalogGridEl.appendChild(card);
             });
         }
+
+        // --- SISTEMA DE DETALHES DO PRODUTO ---
+        window.openProductDetails = function(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            detailsModalImg.src = product.image;
+            detailsModalImg.onerror = function() {
+                this.src = 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400';
+            };
+            
+            detailsModalCategory.textContent = product.category;
+            detailsModalName.textContent = product.name;
+            detailsModalPrice.textContent = "R$ " + product.price.toFixed(2);
+            detailsModalDesc.textContent = product.desc || "Sem descrição disponível para este produto.";
+
+            // Configura o clique do botão de adicionar ao carrinho de dentro do modal
+            btnDetailsAddToCart.onclick = function() {
+                addToCart(product.id);
+                closeProductDetails();
+            };
+
+            productDetailsModal.classList.remove('hidden');
+        };
+
+        window.closeProductDetails = function() {
+            productDetailsModal.classList.add('hidden');
+        };
 
         window.addToCart = function(productId) {
             const product = products.find(p => p.id === productId);
@@ -887,13 +1038,13 @@
                     if (parsed && parsed.length > 0) {
                         products = parsed;
                     } else {
-                        products = [...defaultProducts];
+                        products = defaultProducts && defaultProducts.length > 0 ? [...defaultProducts] : [];
                     }
                 } catch (e) {
-                    products = [...defaultProducts];
+                    products = defaultProducts && defaultProducts.length > 0 ? [...defaultProducts] : [];
                 }
             } else {
-                products = [...defaultProducts];
+                products = defaultProducts && defaultProducts.length > 0 ? [...defaultProducts] : [];
             }
         }
 
@@ -901,7 +1052,7 @@
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').textContent = message;
             toast.classList.remove('translate-y-24', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 2500);
+            setTimeout(() => toast.add('translate-y-24', 'opacity-0'), 2500);
         }
     <\/script>
 </body>
