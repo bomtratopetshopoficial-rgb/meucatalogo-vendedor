@@ -209,7 +209,7 @@
     </div>
 
     <!-- TOAST POPUP -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-gray-950 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all transform translate-y-24 opacity-0 z-50 flex items-center gap-2 pointer-events-none">
+    <div id="toast" class="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 bg-gray-950 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all transform translate-y-24 opacity-0 z-50 flex items-center gap-2 pointer-events-none">
         <i class="fas fa-check-circle text-emerald-400"></i>
         <span id="toast-msg">Sucesso!</span>
     </div>
@@ -739,7 +739,7 @@
     </div>
 
     <!-- TOAST POPUP -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-gray-950 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all transform translate-y-24 opacity-0 z-50 flex items-center gap-2 pointer-events-none">
+    <div id="toast" class="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 bg-gray-950 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold transition-all transform translate-y-24 opacity-0 z-50 flex items-center gap-2 pointer-events-none">
         <i class="fas fa-check-circle text-emerald-400"><\/i>
         <span id="toast-msg">Sucesso!<\/span>
     </div>
@@ -1087,11 +1087,26 @@
         }
 
         function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').textContent = message;
-            toast.classList.remove('translate-y-24', 'opacity-0');
-            setTimeout(() => toast.add('translate-y-24', 'opacity-0'), 2500);
-        }
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+
+    if (!toast || !toastMsg) return;
+
+    toastMsg.textContent = message;
+
+    // Mostra a mensagem
+    toast.classList.remove('translate-y-24', 'opacity-0');
+
+    // Remove qualquer temporizador anterior
+    if (window.toastTimeout) {
+        clearTimeout(window.toastTimeout);
+    }
+
+    // Esconde depois de 2,5 segundos
+    window.toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+    }, 2500);
+}
     <\/script>
 </body>
 </html>`;
