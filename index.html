@@ -189,7 +189,7 @@
                     <li>Clique no botão verde <b>"Copiar Código"</b> abaixo.</li>
                     <li>Vá ao seu repositório no GitHub e abra o arquivo <b>index.html</b>.</li>
                     <li>Clique para editar, selecione todo o texto antigo, apague-o e cole este novo.</li>
-                    <li>Clique em <b>"Commit changes"</b> para salvar e pronto! O site do cliente atualizará sozinho.</li>
+                    <li>Clique em <b>"Commit changes"</b> para salvar. O GitHub Pages publicará a nova versão após o processamento do commit.</li>
                 </ol>
             </div>
 
@@ -326,6 +326,52 @@
         const btnCopyCode = document.getElementById('btn-copy-code');
         const outputCodeArea = document.getElementById('output-code-area');
 
+
+        // Carrega as configurações e produtos salvos no navegador do painel administrativo.
+        // Mantém os produtos padrão apenas quando ainda não existe um catálogo salvo.
+        function loadFromLocalStorage() {
+            try {
+                const savedStore = localStorage.getItem('zapcatalog_store');
+                const savedProds = localStorage.getItem('zapcatalog_products');
+
+                if (savedStore) {
+                    try {
+                        const parsedStore = JSON.parse(savedStore);
+                        if (parsedStore && typeof parsedStore === 'object') {
+                            storeConfig = { ...storeConfig, ...parsedStore };
+                        }
+                    } catch (error) {
+                        console.error('Erro ao carregar as configurações da loja:', error);
+                    }
+                }
+
+                if (savedProds !== null) {
+                    try {
+                        const parsedProducts = JSON.parse(savedProds);
+                        if (Array.isArray(parsedProducts)) {
+                            products = parsedProducts.map(product => ({
+                                ...product,
+                                price: Number(product.price) || 0,
+                                category: product.category || 'Geral',
+                                desc: product.desc || '',
+                                image: product.image || 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400'
+                            }));
+                        } else {
+                            products = [...defaultProducts];
+                        }
+                    } catch (error) {
+                        console.error('Erro ao carregar os produtos salvos:', error);
+                        products = [...defaultProducts];
+                    }
+                } else {
+                    products = [...defaultProducts];
+                }
+            } catch (error) {
+                console.error('Erro ao acessar o armazenamento local:', error);
+                products = [...defaultProducts];
+            }
+        }
+
         window.addEventListener('load', () => {
             loadFromLocalStorage();
             updateStoreUI();
@@ -393,8 +439,18 @@
             const editId = prodEditIdInput.value;
             const name = prodNameInput.value.trim();
             const price = parseFloat(prodPriceInput.value);
-            const category = prodCategorySelect.value;
+            const category = prodCategorySelect.value || 'Geral';
             const desc = prodDescTextarea.value.trim();
+
+            if (!name) {
+                showToast('Informe o nome do produto.');
+                return;
+            }
+
+            if (!Number.isFinite(price) || price < 0) {
+                showToast('Informe um preço válido.');
+                return;
+            }
 
             let image = "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400";
             if (uploadedProductImageBase64) {
@@ -819,7 +875,16 @@
         const btnAcceptDeliveryWarning = document.getElementById('btn-accept-delivery-warning');
 
         window.addEventListener('load', () => {
-            loadFromLocalStorage();
+            // O catálogo publicado usa os dados incorporados neste HTML.
+            // Isso evita que um localStorage antigo impeça as atualizações feitas pelo painel.
+            products = Array.isArray(defaultProducts) ? defaultProducts.map(product => ({
+                ...product,
+                price: Number(product.price) || 0,
+                category: product.category || 'Geral',
+                desc: product.desc || '',
+                image: product.image || 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400'
+            })) : [];
+
             updateStoreUI();
             renderCategoryFilters();
             renderClientCatalog();
@@ -1087,26 +1152,22 @@
         }
 
         function showToast(message) {
-    const toast = document.getElementById('toast');
-    const toastMsg = document.getElementById('toast-msg');
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
 
-    if (!toast || !toastMsg) return;
+            if (!toast || !toastMsg) return;
 
-    toastMsg.textContent = message;
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-y-24', 'opacity-0');
 
-    // Mostra a mensagem
-    toast.classList.remove('translate-y-24', 'opacity-0');
+            if (window.toastTimeout) {
+                clearTimeout(window.toastTimeout);
+            }
 
-    // Remove qualquer temporizador anterior
-    if (window.toastTimeout) {
-        clearTimeout(window.toastTimeout);
-    }
-
-    // Esconde depois de 2,5 segundos
-    window.toastTimeout = setTimeout(() => {
-        toast.classList.add('translate-y-24', 'opacity-0');
-    }, 2500);
-}
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2500);
+        }
     <\/script>
 </body>
 </html>`;
@@ -1132,28 +1193,16 @@
         }
 
         function saveToLocalStorage() {
-            localStorage.setItem('zapcatalog_store', JSON.stringify(storeConfig));
-            localStorage.setItem('zapcatalog_products', JSON.stringify(products));
+            try {
+                localStorage.setItem('zapcatalog_store', JSON.stringify(storeConfig));
+                localStorage.setItem('zapcatalog_products', JSON.stringify(products));
+                return true;
+            } catch (error) {
+                console.error('Erro ao salvar os dados no armazenamento local:', error);
+                showToast('Não foi possível salvar. Verifique o armazenamento do navegador.');
+                return false;
+            }
         }
-
-        function loadFromLocalStorage() {
-            const savedStore = localStorage.getItem('zapcatalog_store');
-            const savedProds = localStorage.getItem('zapcatalog_products');
-            if (savedStore) storeConfig = JSON.parse(savedStore);
-            if (savedProds && JSON.parse(savedProds).length > 0) products = JSON.parse(savedProds); else products = [...defaultProducts];
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').textContent = message;
-            toast.classList.remove('translate-y-24', 'opacity-0');
-            setTimeout(() => toast.classList.add('translate-y-24', 'opacity-0'), 2500);
-        }
-    <\/script>
-</body>
-</html>`;
-
-            outputCodeArea.value = generatedHtml;
     </script>
 </body>
 </html>
